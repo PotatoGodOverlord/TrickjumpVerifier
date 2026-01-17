@@ -1,8 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trickjump Verifier</title>
+  <link rel="stylesheet" href="main.css">
 </head>
 <body>
-    <h1>Trickjump Verifier</h1>
+  <!-- Input area -->
+  <div id="inputArea">
+    <input type="file" id="fileInput">
+    <textarea id="pasteInput" placeholder="Or paste text here"></textarea>
+    <button id="loadData">Load Data</button>
+  </div>
+
+  <!-- Main app area (hidden initially) -->
+  <div id="appArea" style="display: none;">
+    <div id="topArea">
+      <div id="checklistContainer"></div>
+      <div id="proofPanel">
+        <a id="proofLink" href="#" target="_blank">Proof</a>
+      </div>
+    </div>
+    <div id="detailsPanel">
+      <div id="counters">Accepted: 0 | Declined: 0</div>
+      <button id="downloadAccepted">Download Accepted</button>
+    </div>
+  </div>
+
+  <script src="verifier.js"></script>
 </body>
+
