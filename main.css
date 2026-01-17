@@ -9,8 +9,7 @@ body {
 /* Main app area layout */
 #appArea {
   display: grid;
-  grid-template-rows: 1fr auto; /* top takes remaining height, bottom is details */
-  grid-template-columns: 1fr;   /* single column (bottom spans full width) */
+  grid-template-rows: 80% 20%;
   height: 100vh;
 }
 
@@ -19,9 +18,18 @@ body {
   display: grid;
   width: 100%;
   grid-template-columns: 25% 75%; /* left checklist, right proof link */
-  height: 80%;                   /* fill available top space */
+  height: 100%;                   /* fill available top space */
 }
 
+#leftSide {
+    display: grid;
+    grid-template-rows: 10% 90%;
+    width: 100%;
+}
+
+#searchContainer {
+    width: 70%;
+}
 /* Checklist panel - left */
 #checklistWrapper {
   position: relative;         /* needed for overlay fades */
@@ -120,11 +128,18 @@ body {
 }
 
 /* Bottom section: details */
+#bottomArea {
+    width: 100%;
+    bottom: 0;
+}
+
 #detailsPanel {
   height: 150px; /* fixed height, adjust as needed */
+  width: 30%;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  justify-self: center;
   align-items: center;
   text-align: center;
   border-top: 1px solid #ccc;
@@ -168,6 +183,10 @@ textarea {
   width: 400px;
   height: 100px;
   margin-top: 10px;
+}
+
+#loadData {
+    margin: 10px;
 }
 
 /* Scrollbars for long lists.

@@ -17,20 +17,36 @@
   <!-- Main app area -->
   <div id="appArea" style="display: none;">
     <div id="topArea">
-      <div id="checklistWrapper">
-        <div class="fadeTop"></div>
-        <div id="checklistBounds">
-            <div id="checklistContainer"></div>
+        <div id="leftSide">
+            <div id="searchContainer">
+                <input type="text" id="searchBox" placeholder="Search...">
+                <div id="sortBoxes">
+                    <input type="checkbox" id="sort_l"><label>By Link</label>
+                </div>
+            </div>
+            <div id="checklistWrapper">
+                <div class="fadeTop"></div>
+                <div id="checklistBounds">
+                    <div id="checklistContainer"></div>
+                </div>
+                <div class="fadeBottom"></div>
+            </div>
         </div>
-        <div class="fadeBottom"></div>
-      </div>
       <div id="proofPanel">
         <a id="proofLink" href="#" target="_blank"></a>
       </div>
     </div>
-    <div id="detailsPanel">
-      <div id="counters">Accepted: 0 | Declined: 0</div>
-      <button id="downloadAccepted">Download Accepted</button>
+    <div id="bottomArea">
+        <div style="align-items:flex-start;">
+            <button id="acceptButton">Accept</button>
+            <button id="declineButton">Decline</button>
+            <button id="skipButton">Skip</button>
+            <button id="backButton">Back</button>
+        </div>
+        <div id="detailsPanel">
+        <div id="counters">Accepted: 0 | Declined: 0</div>
+        <button id="downloadAccepted">Download Accepted</button>
+        </div>
     </div>
   </div>
 

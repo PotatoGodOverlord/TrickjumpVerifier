@@ -5,6 +5,8 @@ const loadDataBtn = document.getElementById("loadData");
 const inputArea = document.getElementById("inputArea");
 const appArea = document.getElementById("appArea");
 
+const searchContainer = document.getElementById("searchContainer");
+const sortBoxes = document.getElementById("sortBoxes");
 const checklistContainer = document.getElementById("checklistContainer");
 const proofLink = document.getElementById("proofLink");
 const counters = document.getElementById("counters");
@@ -13,7 +15,16 @@ const downloadBtn = document.getElementById("downloadAccepted");
 let items = [];
 let acceptedCount = 0;
 let declinedCount = 0;
-
+let viewState = {
+    searchQuery: "",
+    sortPriority: {
+        sameLink: false,
+        location: false,
+        tier: false,
+        diff: false
+    },
+    activeItemId: null
+};
 // Load data from file or textarea
 loadDataBtn.addEventListener("click", () => {
   let content = pasteInput.value;
@@ -21,27 +32,25 @@ loadDataBtn.addEventListener("click", () => {
     const reader = new FileReader();
     reader.onload = (e) => processData(e.target.result);
     reader.readAsText(fileInput.files[0]);
-  } else if (content.trim() !== "") {
+  } else if (content.trim() !== "" && content.includes("|")) {
     processData(content);
   } else {
-    alert("Please upload a file or paste content.");
+    alert("Please upload a file or paste valid content.");
   }
 });
 
 function processData(text) {
-    // --- 1️⃣ Split text into lines ---
     const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
 
-    // --- 2️⃣ Parse header to get column index map ---
     const headerCols = lines[0].split(">").map(h => h.trim()).filter(Boolean);
     const colIndex = Object.fromEntries(headerCols.map((name, i) => [name, i]));
 
     const totalCols = headerCols.length;
 
-    // --- 3️⃣ Helper function to split a row into columns ---
+    //helper function to split a row into columns
     const splitCols = row => row.split("|").map(c => c.trim());
 
-    // --- 4️⃣ Reconstruct logical rows ---
+    //reconstruct logical rows
     const logicalRows = [];
     let buffer = "";
 
@@ -50,14 +59,17 @@ function processData(text) {
 
     const cols = splitCols(buffer);
 
-    // If we have enough columns, commit the row
+    //enough columns -> complete row
     if (cols.length >= totalCols) {
-        logicalRows.push(cols);
+        //store row only if proof is present in row
+        if (cols[colIndex.PROOF] && cols[colIndex.PROOF].trim() !== "") {
+            logicalRows.push(cols);
+        }
         buffer = "";
     }
     }
 
-    // --- 5️⃣ Convert logical rows into items ---
+    //convert to items
     items = logicalRows.map(cols => ({
     name: cols[colIndex.NAME],
     proof: cols[colIndex.PROOF],
@@ -65,24 +77,31 @@ function processData(text) {
     ...(colIndex.DIFF !== undefined && { diff: normalizeDiff(cols[colIndex.DIFF])}),
     ...(colIndex.TIER !== undefined && { tier: normalizeTier(cols[colIndex.TIER])}),
     accepted: false,
-    declined: false
+    declined: false,
+    id: Math.random().toString(36).substring(2, 15)
     }));
 
-    // --- 6️⃣ Sort alphabetically by name if desired ---
+    //default sort
     items.sort((a, b) => a.name.localeCompare(b.name));
+    //add sort boxes
+    if (items[0].location !== undefined) {
+        sortBoxes.innerHTML += `<input type="checkbox" id="sort_k"><label for="sort_k">By Kingdom</label> <br> <br>`;
+    }
+    if (colIndex.TIER !== undefined) {
+        sortBoxes.innerHTML += `<input type="checkbox" id="sort_t"><label for="sort_t">By Tier</label>`;
+    }
+    if (colIndex.DIFF !== undefined) {
+        sortBoxes.innerHTML += `<input type="checkbox" id="sort_d"><label for="sort_d">By Diff</label>`;
+    }
 
-    // --- ✅ Result: `items` contains all parsed entries ---
-    console.log(items);
-
-    renderChecklist();
+    updateView();
 
   // Show app, hide input
   inputArea.style.display = "none";
-  appArea.style.display = "flex";
+  appArea.style.display = "grid";
 }
 // -------------------------
-// 1️⃣ Diff normalization
-// -------------------------
+//diff mapping
 const diffMap = {
   "Low Elite": 11,
   "Mid Elite": 12,
@@ -110,10 +129,7 @@ function normalizeDiff(raw) {
   return undefined;
 }
 
-
-// -------------------------
-// 2️⃣ Tier normalization
-// -------------------------
+//tier mapping
 const tierMap = {
   "Beginner": 1,
   "Intermediate": 2,
@@ -134,10 +150,7 @@ function normalizeTier(raw) {
   return tierMap[trimmed] ?? undefined;
 }
 
-
-// -------------------------
-// 3️⃣ Location normalization
-// -------------------------
+//kingdom mapping
 const locationMap = {
   "Mushroom Kingdom": 1,
   "Cap Kingdom": 2,
@@ -169,15 +182,15 @@ function normalizeLocation(raw) {
 }
 
 
-function renderChecklist() {
+function renderChecklist(visibleItems) {
   checklistContainer.innerHTML = "";
-  items.forEach((item, idx) => {
+  visibleItems.forEach((item, idx) => {
     const div = document.createElement("div");
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.id = "item_" + idx;
     checkbox.addEventListener("change", () => {
-      updateDetails(idx);
+      updateDetails(item.id);
     });
     const label = document.createElement("label");
     label.htmlFor = "item_" + idx;
@@ -188,8 +201,8 @@ function renderChecklist() {
   });
 }
 
-function updateDetails(idx) {
-  const item = items[idx];
+function updateDetails(id) {
+  const item = items.find(i => i.id === id);
   proofLink.href = item.proof;
     proofLink.textContent = item.name + "";
 }
@@ -205,192 +218,75 @@ downloadBtn.addEventListener("click", () => {
   a.click();
   URL.revokeObjectURL(url);
 });
-/*
-document.addEventListener('DOMContentLoaded', function() {
-  const wrapper = document.getElementById('checklistWrapper');
-  const checklist = document.getElementById('checklistContainer');
-  const fadeTop = document.querySelector('.fadeTop');
-  const fadeBottom = document.querySelector('.fadeBottom');
-  
-  // Make fade areas taller for smoother transitions
-  fadeTop.style.height = '60px';
-  fadeBottom.style.height = '60px';
-  
-  // Update checklist padding to match new fade heights
-  checklist.style.padding = '60px 10px';
-  checklist.style.margin = '-60px 0';
-  
-  // Easing function for smoother opacity transition
-  // This creates a curve where more area is near full opacity
-  function easeOutOpacity(progress) {
-    // Cubic ease-out: starts fast, ends slow
-    return 1 - Math.pow(1 - progress, 3);
-  }
-  
-  function easeInOpacity(progress) {
-    // Cubic ease-in: starts slow, ends fast
-    return Math.pow(progress, 3);
-  }
-  
-  // Create gradient canvas with correct orientation
-  function createGradientCanvas() {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    const documentHeight = Math.max(
-      document.body.scrollHeight,
-      document.documentElement.scrollHeight,
-      document.body.offsetHeight,
-      document.documentElement.offsetHeight,
-      document.body.clientHeight,
-      document.documentElement.clientHeight
-    );
-    
-    canvas.width = 1;
-    canvas.height = documentHeight;
-    
-    // Create vertical gradient from TOP to BOTTOM
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    
-    // Your body gradient colors in correct order (top to bottom):
-    // 356deg means almost vertical upward direction
-    // So rgba(240, 252, 255, 1) is at the TOP
-    // rgba(255, 248, 237, 1) is at the BOTTOM
-    gradient.addColorStop(0, 'rgba(240, 252, 255, 1)');      // Top (light blue)
-    gradient.addColorStop(0.4, 'rgba(247, 255, 242, 1)');    // 40% (light green)
-    gradient.addColorStop(1, 'rgba(255, 248, 237, 1)');      // Bottom (light peach)
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 1, canvas.height);
-    
-    return { canvas, ctx };
-  }
-  
-  // Get color at Y position (with alpha channel)
-  function getColorAtYPosition(yPos, ctx) {
-    const pixel = ctx.getImageData(0, Math.max(0, Math.min(yPos, ctx.canvas.height - 1)), 1, 1).data;
-    return {
-      r: pixel[0],
-      g: pixel[1],
-      b: pixel[2],
-      a: pixel[3] / 255
-    };
-  }
-  
-  // Create a gradient with multiple stops for smoother transition
-  function createSmoothGradient(color, direction, fadeHeight) {
-    const stops = [];
-    const numStops = 8; // More stops for smoother gradient
-    
-    if (direction === 'bottom') {
-      // For top fade: goes from solid at top to transparent at bottom
-      for (let i = 0; i <= numStops; i++) {
-        const progress = i / numStops;
-        const position = progress * 100;
-        // Use ease-out: more area stays near full opacity
-        const opacity = 1 - easeOutOpacity(progress);
-        stops.push(`rgba(${color.r}, ${color.g}, ${color.b}, ${opacity.toFixed(3)}) ${position.toFixed(1)}%`);
-      }
-    } else {
-      // For bottom fade: goes from solid at bottom to transparent at top
-      for (let i = 0; i <= numStops; i++) {
-        const progress = i / numStops;
-        const position = progress * 100;
-        // Use ease-in: more area stays near full opacity at the edge
-        const opacity = 1 - easeInOpacity(progress);
-        stops.push(`rgba(${color.r}, ${color.g}, ${color.b}, ${opacity.toFixed(3)}) ${position.toFixed(1)}%`);
-      }
-    }
-    
-    return `linear-gradient(to ${direction === 'bottom' ? 'bottom' : 'top'}, ${stops.join(', ')})`;
-  }
-  
-  // Optimized update function
-  let gradientCache = null;
-  let lastDocumentHeight = 0;
-  
-  function updateFadeGradients() {
-  if (!wrapper || !fadeTop || !fadeBottom) return;
-  
-  // Check if we need to recreate the gradient cache
-  const currentDocHeight = document.documentElement.scrollHeight;
-  if (!gradientCache || currentDocHeight !== lastDocumentHeight) {
-    gradientCache = createGradientCanvas();
-    lastDocumentHeight = currentDocHeight;
-  }
-  
-  const { ctx } = gradientCache;
-  
-  // Get wrapper position relative to document
-  const wrapperRect = wrapper.getBoundingClientRect();
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-  
-  // Calculate absolute Y positions
-  const topFadeTopY = wrapperRect.top + scrollTop;
-  const bottomFadeBottomY = wrapperRect.bottom + scrollTop;
-  
-  // FIXED: Hardcoded colors
-  const topColor = {
-    r: 246,  // rgba(243, 253, 251, 1)
-    g: 255,
-    b: 245,
-    a: 1
-  };
-  
-  // bottomColor from sampled position (or hardcode if you prefer)
-  const bottomColor = getColorAtYPosition(bottomFadeBottomY, ctx);
-  
-  // Use your swapped version
-  fadeBottom.style.background = createSmoothGradient(topColor, 'top', fadeBottom.offsetHeight);
-  fadeTop.style.background = createSmoothGradient(bottomColor, 'bottom', fadeTop.offsetHeight);
-}
-  
-  // Initial update
-  updateFadeGradients();
-  
-  // Use IntersectionObserver for more efficient scroll handling
-  let isUpdating = false;
-  let rafId = null;
-  
-  function scheduleUpdate() {
-    if (isUpdating) return;
-    
-    if (rafId) {
-      cancelAnimationFrame(rafId);
-    }
-    
-    rafId = requestAnimationFrame(() => {
-      updateFadeGradients();
-      isUpdating = false;
-      rafId = null;
-    });
-    
-    isUpdating = true;
-  }
-  
-  // Event listeners with throttling
-  let scrollTimeout;
-  function handleScroll() {
-    if (scrollTimeout) {
-      clearTimeout(scrollTimeout);
-    }
-    scrollTimeout = setTimeout(scheduleUpdate, 16); // ~60fps
-  }
-  
-  window.addEventListener('scroll', handleScroll, { passive: true });
-  window.addEventListener('resize', scheduleUpdate);
-  
-  checklist.addEventListener('scroll', handleScroll, { passive: true });
-  
-  // Observe DOM changes
-  const observer = new MutationObserver(() => {
-    gradientCache = null;
-    scheduleUpdate();
-  });
-  
-  observer.observe(document.body, { 
-    childList: true, 
-    subtree: true 
-  });
+
+//sort listeners
+document.getElementById("searchContainer").addEventListener("change", e => {
+    if (e.target.id === "sort_l") viewState.sortPriority.sameLink = e.target.checked;
+    else if (e.target.id === "sort_k") viewState.sortPriority.location = e.target.checked;
+    else if (e.target.id === "sort_t") viewState.sortPriority.tier = e.target.checked;
+    else if (e.target.id === "sort_d") viewState.sortPriority.diff = e.target.checked;
+
+    updateView();
 });
-*/
+
+
+//search listener
+document.getElementById("searchBox").addEventListener("input", (e) => {
+    if (!viewState.sortPriority.sameLink) {
+        console.log("Currently false in search");
+    }
+    viewState.searchQuery = e.target.value;
+    if (viewState.sortPriority.sameLink) {
+        console.log("Now true in search");
+    }
+    updateView();
+});
+
+function updateView() {
+    // Implement sorting logic based on viewState.sortPriority
+
+    visibleItems = items.filter(searchMatch).slice().sort(comparator);
+
+    renderChecklist(visibleItems);
+}
+
+function comparator(a, b) {
+    //link
+    if (viewState.sortPriority.sameLink) {
+        const aLink = a.proof || "";
+        const bLink = b.proof || "";
+        if (aLink !== bLink) return aLink.localeCompare(bLink);
+    }
+
+    //location
+    if (viewState.sortPriority.location) {
+        if (a.location != null && b.location != null && a.location !== b.location) {
+            return a.location - b.location;
+        }
+    }
+
+    //tier
+    if (viewState.sortPriority.tier) {
+        if (a.tier != null && b.tier != null && a.tier !== b.tier) {
+            return a.tier - b.tier;
+        }
+    }
+
+    //diff
+    if (viewState.sortPriority.diff) {
+        if (a.diff != null && b.diff != null && a.diff !== b.diff) {
+            return a.diff - b.diff;
+        }
+    }
+
+    //fallback: always sort by name
+    return a.name.localeCompare(b.name);
+}
+
+
+function searchMatch(item) {
+    const query = viewState.searchQuery.toLowerCase().trim();
+    if (!query) return true;  // no search → everything matches
+
+    return item.name.toLowerCase().includes(query);
+}
