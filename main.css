@@ -18,46 +18,66 @@ body {
 #topArea {
   display: grid;
   width: 100%;
-  grid-template-columns: 33% 67%; /* left checklist, right proof link */
+  grid-template-columns: 25% 75%; /* left checklist, right proof link */
   height: 80%;                   /* fill available top space */
 }
 
 /* Checklist panel - left */
+#checklistWrapper {
+  position: relative;         /* needed for overlay fades */
+  width: 100%;
+  height: 100%;               /* fill available top area */
+  box-sizing: border-box;
+  overflow: hidden;           /* hide fade overlays outside bounds */
+}
+
+/* Scrollable checklist */
 #checklistContainer {
-  padding: 20px 10px;
-  border-right: 1px solid #ccc;
-  max-height: calc(100% - 40px); /* leave room for padding (20px top + 20px bottom) */
-  overflow-y: auto;
+  height: 100%;
+  overflow-y: auto;           /* real scrollbar */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  position: relative;
+  padding: 60px 10px; /* Add vertical padding for fade areas */
+  margin: -60px 0; /* Negative margin to compensate */
+  scrollbar-width: thin;       /* Firefox */
+  scrollbar-color: #888 #f0f0f0; /* Firefox colors */
+  /* NEW: Snap points to prevent content from hiding under fades */
+  scroll-snap-type: y mandatory;
+  z-index: 1;
 }
 
-/* Top fade */
-#checklistContainer::before {
-  content: "";
-  position: sticky;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 20px; /* fade height */
-  background: linear-gradient(to bottom, white, transparent);
-  pointer-events: none; /* lets clicks pass through */
-  z-index: 2;
+/* Webkit scrollbar styling (Chrome, Edge, Safari) */
+#checklistContainer::-webkit-scrollbar {
+  width: 10px;
 }
 
-/* Bottom fade */
-#checklistContainer::after {
-  content: "";
-  position: sticky;
-  bottom: 0;
+#checklistContainer::-webkit-scrollbar-track {
+  background: #0f0ff1;
+}
+
+#checklistContainer::-webkit-scrollbar-thumb {
+  background-color: #fd2222;
+  border-radius: 5px;
+  border: 2px solid #f0f0f0;
+}
+.fadeTop, .fadeBottom {
+  position: absolute;
   left: 0;
-  right: 0;
-  height: 20px; /* fade height */
-  background: linear-gradient(to top, white, transparent);
+  right: 10px;
+  height: 60px;
   pointer-events: none;
   z-index: 2;
+}
+.fadeTop {
+  top: 0;
+  height: 60px;
+  background: linear-gradient(rgb(252, 250, 239) 0%, rgba(252, 250, 239, 0.67) 12.5%, rgba(252, 250, 239, 0.424) 25%, rgba(252, 250, 239, 0.243) 37.5%, rgba(252, 250, 239, 0.125) 50%, rgba(252, 250, 239, 0.055) 62.5%, rgba(252, 250, 239, 0.016) 75%, rgba(252, 250, 239, 0.004) 87.5%, rgba(252, 250, 239, 0) 100%);
+}
+
+.fadeBottom {
+  bottom: 0;
+  height: 60px; background: linear-gradient(to top, rgb(246, 255, 245) 0%, rgba(246, 255, 245, 0.996) 12.5%, rgba(246, 255, 245, 0.984) 25%, rgba(246, 255, 245, 0.945) 37.5%, rgba(246, 255, 245, 0.875) 50%, rgba(246, 255, 245, 0.757) 62.5%, rgba(246, 255, 245, 0.576) 75%, rgba(246, 255, 245, 0.33) 87.5%, rgba(246, 255, 245, 0) 100%);
 }
 
 /* Proof panel - right */
@@ -110,6 +130,9 @@ body {
   align-items: center;
 }
 
+#inputArea {
+    justify-content: center;
+}
 
 
 textarea {
