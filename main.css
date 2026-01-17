@@ -25,26 +25,56 @@ body {
 /* Checklist panel - left */
 #checklistWrapper {
   position: relative;         /* needed for overlay fades */
-  width: 100%;
+  width: 70%;
   height: 100%;               /* fill available top area */
   box-sizing: border-box;
   overflow: hidden;           /* hide fade overlays outside bounds */
+  display: flex;
+  flex-direction: column;
 }
 
-/* Scrollable checklist */
+#checklistScrollBounds {
+  position: absolute;
+  top: 60px;
+  bottom: 60px;
+  left: 0;
+  right: 10px;
+  overflow: hidden;
+}
+
 #checklistContainer {
-  height: 100%;
-  overflow-y: auto;           /* real scrollbar */
+  position: absolute; /* NEW: Absolutely position it */
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 60px 10px; /* Add vertical padding for fade areas */
-  margin: -60px 0; /* Negative margin to compensate */
-  scrollbar-width: thin;       /* Firefox */
-  scrollbar-color: #888 #f0f0f0; /* Firefox colors */
-  /* NEW: Snap points to prevent content from hiding under fades */
-  scroll-snap-type: y mandatory;
+  padding: 0 10px;
+  margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f0f0f0;
+  scroll-padding-top: 20px;
+  scroll-padding-bottom: 20px;
   z-index: 1;
+}
+
+#checklistContainer::before {
+  content: '';
+  height: 10px;
+  flex-shrink: 0;
+  width: 80%;
+  order: -9999; /* Ensure it's first */
+}
+
+#checklistContainer::after {
+  content: '';
+  height: 20px;
+  flex-shrink: 0;
+  width: 80%;
+  order: 9999; /* Ensure it's last */
 }
 
 /* Webkit scrollbar styling (Chrome, Edge, Safari) */
@@ -65,19 +95,18 @@ body {
   position: absolute;
   left: 0;
   right: 10px;
-  height: 60px;
+  height: 20px;
   pointer-events: none;
   z-index: 2;
 }
 .fadeTop {
-  top: 0;
-  height: 60px;
-  background: linear-gradient(rgb(252, 250, 239) 0%, rgba(252, 250, 239, 0.67) 12.5%, rgba(252, 250, 239, 0.424) 25%, rgba(252, 250, 239, 0.243) 37.5%, rgba(252, 250, 239, 0.125) 50%, rgba(252, 250, 239, 0.055) 62.5%, rgba(252, 250, 239, 0.016) 75%, rgba(252, 250, 239, 0.004) 87.5%, rgba(252, 250, 239, 0) 100%);
+  top: 10;
+  background: linear-gradient(to bottom, rgb(252, 250, 239) 0%, rgba(252, 250, 239, 0.996) 12.5%, rgba(252, 250, 239, 0.984) 25%, rgba(252, 250, 239, 0.945) 37.5%, rgba(252, 250, 239, 0.875) 50%, rgba(252, 250, 239, 0.757) 62.5%, rgba(252, 250, 239, 0.576) 75%, rgba(252, 250, 239, 0.33) 87.5%, rgba(252, 250, 239, 0) 100%);
 }
 
 .fadeBottom {
   bottom: 0;
-  height: 60px; background: linear-gradient(to top, rgb(246, 255, 245) 0%, rgba(246, 255, 245, 0.996) 12.5%, rgba(246, 255, 245, 0.984) 25%, rgba(246, 255, 245, 0.945) 37.5%, rgba(246, 255, 245, 0.875) 50%, rgba(246, 255, 245, 0.757) 62.5%, rgba(246, 255, 245, 0.576) 75%, rgba(246, 255, 245, 0.33) 87.5%, rgba(246, 255, 245, 0) 100%);
+  background: linear-gradient(to top, rgb(246, 255, 245) 0%, rgba(246, 255, 245, 0.996) 12.5%, rgba(246, 255, 245, 0.984) 25%, rgba(246, 255, 245, 0.945) 37.5%, rgba(246, 255, 245, 0.875) 50%, rgba(246, 255, 245, 0.757) 62.5%, rgba(246, 255, 245, 0.576) 75%, rgba(246, 255, 245, 0.33) 87.5%, rgba(246, 255, 245, 0) 100%);
 }
 
 /* Proof panel - right */
