@@ -10,7 +10,7 @@ const sortBoxes = document.getElementById("sortBoxes");
 const checklistContainer = document.getElementById("checklistContainer");
 const proofLink = document.getElementById("proofLink");
 const counters = document.getElementById("counters");
-const downloadBtn = document.getElementById("downloadAccepted");
+const downloadBtn = document.getElementById("downloadProgress");
 
 const acceptBtn = document.getElementById("acceptButton");
 const declineBtn = document.getElementById("declineButton");
@@ -20,6 +20,7 @@ const backBtn = document.getElementById("backButton");
 let items = [];
 let acceptedCount = 0;
 let declinedCount = 0;
+let remainingCount = 0;
 let viewState = {
     searchQuery: "",
     sortPriority: {
@@ -47,7 +48,10 @@ loadDataBtn.addEventListener("click", () => {
 
 function processData(text) {
     const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-
+    if (lines.length > 0 && lines[0].startsWith("CURRENT PROGRESS FOR REQUEST:")) {
+        processProgressData(lines.slice(1));
+        return;
+    }
     const headerCols = lines[0].split(">").map(h => h.trim()).filter(Boolean);
     const colIndex = Object.fromEntries(headerCols.map((name, i) => [name, i]));
 
@@ -104,12 +108,81 @@ function processData(text) {
         viewState.activeItemId = items[0].id;
         updateDetails(viewState.activeItemId);
     }
+    remainingCount = items.length;
+    counters.textContent = `Accepted: ${acceptedCount} | Declined: ${declinedCount} | Remaining: ${remainingCount}`;
     updateView();
 
   // Show app, hide input
   inputArea.style.display = "none";
   appArea.style.display = "grid";
 }
+
+function processProgressData(lines) {
+    // Split rows into columns
+    const splitCols = row => row.split("|").map(c => c.trim());
+
+    const headerCols = lines[0].split("|").map(h => h.trim()).filter(Boolean);
+    const colIndex = Object.fromEntries(headerCols.map((name, i) => [name, i]));
+    const totalCols = headerCols.length;
+
+    const rows = lines.map(splitCols).filter(cols =>
+        cols.length > 0 && cols[1] && cols[1].trim() !== ""
+    );
+
+    if (rows.length === 0) return;
+
+    // Convert rows into items
+    items = rows.map(cols => ({
+        name: cols[colIndex.name],
+        proof: cols[colIndex.proof],
+        ...(colIndex.location !== undefined && cols[colIndex.location] !== "" && {
+            location: normalizeLocation(cols[colIndex.location])
+        }),
+        ...(colIndex.diff !== undefined && cols[colIndex.diff] !== "" && {
+            diff: normalizeDiff(cols[colIndex.diff])
+        }),
+        ...(colIndex.tier !== undefined && cols[colIndex.tier] !== "" && {
+            tier: normalizeTier(cols[colIndex.tier])
+        }),
+        accepted: cols[colIndex.accepted] === "true",
+        declined: cols[colIndex.declined] === "true",
+        id: Math.random().toString(36).substring(2, 15)
+    }));
+
+    // Default sort
+    items.sort((a, b) => a.name.localeCompare(b.name));
+    console.log(items);
+
+    // Initialize accepted/declined counts
+    acceptedCount = items.filter(i => i.accepted).length;
+    declinedCount = items.filter(i => i.declined).length;
+    remainingCount = items.length - acceptedCount - declinedCount;
+    counters.textContent = `Accepted: ${acceptedCount} | Declined: ${declinedCount} | Remaining: ${remainingCount}`;
+    // Restore sort boxes
+
+    if (items[0].location !== undefined) {
+        sortBoxes.innerHTML += `<input type="checkbox" id="sort_k"><label for="sort_k">By Kingdom</label> <br>`;
+    }
+    if (colIndex.tier !== undefined) {
+        sortBoxes.innerHTML += `<input type="checkbox" id="sort_t"><label for="sort_t">By Tier</label>`;
+    }
+    if (colIndex.diff !== undefined) {
+        sortBoxes.innerHTML += `<input type="checkbox" id="sort_d"><label for="sort_d">By Diff</label>`;
+    }
+
+    // Set first item active
+    if (items.length > 0) {
+        viewState.activeItemId = items[0].id;
+        updateDetails(viewState.activeItemId);
+    }
+
+    updateView();
+
+    // Show app, hide input
+    inputArea.style.display = "none";
+    appArea.style.display = "grid";
+}
+
 // -------------------------
 //diff mapping
 const diffMap = {
@@ -199,12 +272,14 @@ function renderChecklist(visibleItems) {
     //create listener
     div.addEventListener("click", () => {
         if (viewState.activeItemId !== null) {
+             //reset old
             const oldActive = document.getElementById("item_" + viewState.activeItemId);
-            if (oldActive) oldActive.style.backgroundColor = ""; //reset old
+            if (oldActive) oldActive.style.backgroundColor = "";
         }
+        //highlight new
         viewState.activeItemId = item.id;
         const newActive = document.getElementById("item_" + viewState.activeItemId);
-        newActive.style.backgroundColor = "#7a94f5b0"; //highlight new
+        newActive.style.backgroundColor = "#7a94f5b0"; 
         updateDetails(item.id);
     });
     if (viewState.activeItemId === item.id) {
@@ -254,7 +329,6 @@ async function updateDetails(id) {
     }
 
     proofLink.textContent = `${link}`;
-  // Use the embed system from embed.js
   const embedSuccess = await window.tryEmbedMedia(item.proof);
   if (!embedSuccess) {
     if (viewState.autoOpen) {
@@ -264,13 +338,56 @@ async function updateDetails(id) {
 }
 
 // Download accepted items
+// Download accepted items
 downloadBtn.addEventListener("click", () => {
-  const accepted = items.filter(i => i.accepted).map(i => i.name).join("\n");
-  const blob = new Blob([accepted], { type: "text/plain" });
+  const acceptedItems = items.filter(i => i.accepted);
+  const declinedItems = items.filter(i => i.declined);
+  const unverifiedItems = items.filter(
+    i => !i.accepted && !i.declined
+  );
+
+  const orderedItems = [
+    ...acceptedItems,
+    ...declinedItems,
+    ...unverifiedItems
+  ];
+
+  const existingColumns = Array.from(
+    new Set(items.flatMap(item => Object.keys(item)))
+  ).filter(col => col !== "id");
+
+  const preferredOrder = [
+    "name",
+    "proof",
+    "location",
+    "diff",
+    "tier",
+    "accepted",
+    "declined"
+  ];
+
+  const columns = preferredOrder.filter(col =>
+    existingColumns.includes(col)
+  );
+
+  const headerLine = "CURRENT PROGRESS FOR REQUEST:";
+  const columnHeaders = columns.join(" | ");  // Add this line
+
+  const textContent = [
+    headerLine,
+    columnHeaders,  // Add column headers
+    ...orderedItems.map(item =>
+      columns
+        .map(col => item[col] ?? "")
+        .join(" | ")
+    )
+  ].join("\n");
+
+  const blob = new Blob([textContent], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "accepted.txt";
+  a.download = "current_progress.txt";
   a.click();
   URL.revokeObjectURL(url);
 });
@@ -293,8 +410,6 @@ document.getElementById("searchBox").addEventListener("input", (e) => {
 });
 
 function updateView() {
-    // Implement sorting logic based on viewState.sortPriority
-
     visibleItems = items.filter(searchMatch).filter(linkMatch).slice().sort(comparator);
 
     renderChecklist(visibleItems);
@@ -347,8 +462,8 @@ function scrollActiveIntoView() {
     const el = document.getElementById(`item_${viewState.activeItemId}`);
     if (el) {
         el.scrollIntoView({
-            behavior: "auto",   // quick scrolling
-            block: "center"       // vertical alignment: center of container
+            behavior: "auto",
+            block: "center"
         });
     }
 }
@@ -363,7 +478,8 @@ acceptBtn.addEventListener("click", () => {
         item.accepted = true;
         item.declined = false;
         acceptedCount++;
-        counters.textContent = `Accepted: ${acceptedCount} | Declined: ${declinedCount}`;
+        remainingCount--;
+        counters.textContent = `Accepted: ${acceptedCount} | Declined: ${declinedCount} | Remaining: ${remainingCount}`;
         move_to_next_item();
     }
 });
@@ -376,7 +492,8 @@ declineBtn.addEventListener("click", () => {
         item.accepted = false;
         item.declined = true;
         declinedCount++;
-        counters.textContent = `Accepted: ${acceptedCount} | Declined: ${declinedCount}`;
+        remainingCount--;
+        counters.textContent = `Accepted: ${acceptedCount} | Declined: ${declinedCount} | Remaining: ${remainingCount}`;
         move_to_next_item();
     }
 });
@@ -393,9 +510,9 @@ function move_to_next_item() {
     if (!viewState.activeItemId) return;
     const item = items.find(i => i.id === viewState.activeItemId);
     if (item) {
-        //first, get current item
+        //reset current
         const div = document.getElementById("item_" + viewState.activeItemId);
-        if (div) div.style.backgroundColor = ""; //reset current
+        if (div) div.style.backgroundColor = ""; 
         //find next item
         const currentIndex = visibleItems.findIndex(i => i.id === viewState.activeItemId);
         const nextIndex = (currentIndex + 1) % visibleItems.length;
@@ -420,9 +537,9 @@ function move_to_previous_item() {
     if (!viewState.activeItemId) return;
     const item = items.find(i => i.id === viewState.activeItemId);
     if (item) {
-        //first, get current item
+        //reset current
         const div = document.getElementById("item_" + viewState.activeItemId);
-        if (div) div.style.backgroundColor = ""; //reset current
+        if (div) div.style.backgroundColor = "";
         //find previous item
         const currentIndex = visibleItems.findIndex(i => i.id === viewState.activeItemId);
         const prevIndex = Math.max(0, (currentIndex - 1 + visibleItems.length) % visibleItems.length);

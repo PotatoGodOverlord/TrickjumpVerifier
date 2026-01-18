@@ -1,4 +1,4 @@
-// embed.js - All embed functionality
+// yes this is AI generated I don't want to spend my time figuring out embedding
 (function() {
     'use strict';
     
@@ -16,7 +16,17 @@
             console.error('videoContainer not found');
             return false;
         }
-        
+        const existingEmbed = container.querySelector('iframe, video, blockquote');
+        if (existingEmbed) {
+            const requestedKey = getEmbedKey(url);
+            const existingKey = container.dataset.embedKey;
+
+            if (requestedKey && existingKey && requestedKey === existingKey) {
+                console.log('Already embedded this content');
+                return true;
+            }
+        }
+
         // Clear previous embed
         container.innerHTML = '';
         hideFallbackMessage();
@@ -172,6 +182,7 @@
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowfullscreen>
             </iframe>`;
+        container.dataset.embedKey = getEmbedKey(url);
         return true;
     }
     
@@ -190,6 +201,7 @@
                 allow="autoplay; fullscreen; picture-in-picture"
                 allowfullscreen>
             </iframe>`;
+        container.dataset.embedKey = getEmbedKey(url);
         return true;
     }
     
@@ -216,6 +228,7 @@
                 frameborder="0"
                 allowfullscreen>
             </iframe>`;
+        container.dataset.embedKey = getEmbedKey(url);
         return true;
     }
     
@@ -234,7 +247,7 @@
             script.onload = () => window.tiktokEmbedLoaded = true;
             document.head.appendChild(script);
         }
-        
+        container.dataset.embedKey = getEmbedKey(url);
         return true;
     }
     
@@ -257,7 +270,7 @@
         } else {
             window.instgrm.Embeds.process();
         }
-        
+        container.dataset.embedKey = getEmbedKey(url);
         return true;
     }
     
@@ -287,7 +300,7 @@
         }).catch(err => {
             console.error('Failed to load Twitter widget:', err);
         });
-        
+        container.dataset.embedKey = getEmbedKey(url);
         return true;
     }
     
@@ -340,7 +353,35 @@
         }
         return null;
     }
-    
+    function getEmbedKey(url) {
+        try {
+            const platform = getVideoPlatform(url);
+
+            switch (platform) {
+                case 'youtube':
+                    return `youtube:${extractYouTubeId(url)}`;
+                case 'vimeo': {
+                    const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+                    return m ? `vimeo:${m[1]}` : null;
+                }
+                case 'twitch':
+                    return `twitch:${url.split('?')[0]}`;
+                case 'tiktok':
+                    return `tiktok:${url.split('?')[0]}`;
+                case 'instagram':
+                    return `instagram:${url.split('?')[0]}`;
+            }
+
+            if (isTweetUrl(url)) {
+                const id = url.split('/status/')[1]?.split('?')[0];
+                return id ? `twitter:${id}` : null;
+            }
+
+            return null;
+        } catch {
+            return null;
+        }
+    }
     // ========== INITIALIZATION ==========
     document.addEventListener('DOMContentLoaded', function() {
         // Create fallback message if it doesn't exist
