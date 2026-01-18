@@ -366,7 +366,8 @@ function move_to_next_item() {
     const item = items.find(i => i.id === viewState.activeItemId);
     if (item) {
         //first, get current item
-        document.getElementById("item_" + viewState.activeItemId).style.backgroundColor = ""; //reset current
+        const div = document.getElementById("item_" + viewState.activeItemId);
+        if (div) div.style.backgroundColor = ""; //reset current
         //find next item
         const currentIndex = visibleItems.findIndex(i => i.id === viewState.activeItemId);
         const nextIndex = (currentIndex + 1) % visibleItems.length;
@@ -392,7 +393,8 @@ function move_to_previous_item() {
     const item = items.find(i => i.id === viewState.activeItemId);
     if (item) {
         //first, get current item
-        document.getElementById("item_" + viewState.activeItemId).style.backgroundColor = ""; //reset current
+        const div = document.getElementById("item_" + viewState.activeItemId);
+        if (div) div.style.backgroundColor = ""; //reset current
         //find previous item
         const currentIndex = visibleItems.findIndex(i => i.id === viewState.activeItemId);
         const prevIndex = Math.max(0, (currentIndex - 1 + visibleItems.length) % visibleItems.length);

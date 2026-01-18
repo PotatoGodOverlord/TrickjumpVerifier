@@ -118,7 +118,7 @@ body {
 }
 
 .checklistItem {
-    width: 100%;
+    width: 96%;
 }
 .checklistItem:hover {
   background-color: #c0eaf8;
