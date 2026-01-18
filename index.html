@@ -21,7 +21,7 @@
             <div id="searchContainer">
                 <input type="text" id="searchBox" placeholder="Search...">
                 <div id="sortBoxes">
-                    <input type="checkbox" id="sort_l"><label>By Link</label>
+                    <input type="checkbox" id="sort_l"><label>Only Same Link</label>
                 </div>
             </div>
             <div id="checklistWrapper">
@@ -33,7 +33,15 @@
             </div>
         </div>
       <div id="proofPanel">
-        <a id="proofLink" href="#" target="_blank">Proof</a>
+        <a id="proofLink" href="#" target="externalTab">Proof</a>
+        <!-- Video embed container (you already have this) -->
+        <div id="videoContainer" 
+            style="width: 100%; max-width: 800px; min-height: 450px; min-width: 550px; margin: 20px auto;">
+        </div>
+
+        <!-- FALLBACK MESSAGE CONTAINER (ADD THIS!) -->
+        <div id="fallbackMessage" style="display: none;">
+        </div>
       </div>
     </div>
     <div id="bottomArea">
@@ -49,7 +57,10 @@
         </div>
     </div>
   </div>
-
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+    <script async src="https://www.tiktok.com/embed.js"></script>
+    <script async src="https://www.instagram.com/embed.js"></script>
+  <script src="embed.js"></script>
   <script src="verifier.js"></script>
 </body>
 

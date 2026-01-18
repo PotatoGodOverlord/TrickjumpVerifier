@@ -216,3 +216,24 @@ textarea {
 #declineButton {
     background-color: lightcoral;
 }
+
+.twitter-video-only {
+  max-width: 900px;
+  width: 100%;
+  margin: auto;
+  overflow: hidden;
+}
+
+#twitter-widget-0 iframe {
+  width: 100% !important;
+  min-height: 500px;
+  border-radius: 12px;
+  clip-path: inset(100px 0 60px 0);
+  margin-bottom: 0 !important;
+  overflow: hidden;
+}
+
+.twitter-tweet-rendered {
+    width: 550px !important;
+
+}

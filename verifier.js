@@ -28,7 +28,8 @@ let viewState = {
         tier: false,
         diff: false
     },
-    activeItemId: null
+    activeItemId: null,
+    autoOpen: false
 };
 // Load data from file or textarea
 loadDataBtn.addEventListener("click", () => {
@@ -223,10 +224,43 @@ function renderChecklist(visibleItems) {
   });
 }
 
-function updateDetails(id) {
+async function updateDetails(id) {
   const item = items.find(i => i.id === id);
   proofLink.href = item.proof;
-    proofLink.textContent = item.name + "";
+  const sameLinkItems = items.filter(i => i.proof === item.proof);
+    let link = "";
+
+    const maxItems = 5;
+    const total = sameLinkItems.length;
+    const visibleItems = sameLinkItems.slice(0, maxItems);
+
+    for (let i = 0; i < visibleItems.length; i++) {
+        // Add "and" before the last item (only if more than one item)
+        if (i === visibleItems.length - 1 && i !== 0) {
+            link += "and ";
+        }
+
+        link += visibleItems[i].name;
+
+        // Add comma if not the last visible item
+        if (i !== visibleItems.length - 1) {
+            link += ", ";
+        }
+    }
+
+    // Append "+ X others" if there are more than maxItems
+    if (total > maxItems) {
+        link += ` + ${total - maxItems} others`;
+    }
+
+    proofLink.textContent = `${link}`;
+  // Use the embed system from embed.js
+  const embedSuccess = await window.tryEmbedMedia(item.proof);
+  if (!embedSuccess) {
+    if (viewState.autoOpen) {
+        proofLink.click();
+    }
+  }
 }
 
 // Download accepted items
@@ -254,20 +288,14 @@ document.getElementById("searchContainer").addEventListener("change", e => {
 
 //search listener
 document.getElementById("searchBox").addEventListener("input", (e) => {
-    if (!viewState.sortPriority.sameLink) {
-        console.log("Currently false in search");
-    }
     viewState.searchQuery = e.target.value;
-    if (viewState.sortPriority.sameLink) {
-        console.log("Now true in search");
-    }
     updateView();
 });
 
 function updateView() {
     // Implement sorting logic based on viewState.sortPriority
 
-    visibleItems = items.filter(searchMatch).slice().sort(comparator);
+    visibleItems = items.filter(searchMatch).filter(linkMatch).slice().sort(comparator);
 
     renderChecklist(visibleItems);
     scrollActiveIntoView();
@@ -404,4 +432,12 @@ function move_to_previous_item() {
         updateDetails(viewState.activeItemId);
         updateView();
     }
+}
+
+function linkMatch(item) {
+    if (!viewState.sortPriority.sameLink) return true; // no filter → everything matches
+    
+    const activeItem = items.find(i => i.id === viewState.activeItemId);
+    if (!activeItem) return true; // no active item → everything matches
+    return item.proof === activeItem.proof;
 }
