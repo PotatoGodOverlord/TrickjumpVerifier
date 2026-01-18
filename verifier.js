@@ -12,6 +12,11 @@ const proofLink = document.getElementById("proofLink");
 const counters = document.getElementById("counters");
 const downloadBtn = document.getElementById("downloadAccepted");
 
+const acceptBtn = document.getElementById("acceptButton");
+const declineBtn = document.getElementById("declineButton");
+const skipBtn = document.getElementById("skipButton");
+const backBtn = document.getElementById("backButton");
+
 let items = [];
 let acceptedCount = 0;
 let declinedCount = 0;
@@ -85,7 +90,7 @@ function processData(text) {
     items.sort((a, b) => a.name.localeCompare(b.name));
     //add sort boxes
     if (items[0].location !== undefined) {
-        sortBoxes.innerHTML += `<input type="checkbox" id="sort_k"><label for="sort_k">By Kingdom</label> <br> <br>`;
+        sortBoxes.innerHTML += `<input type="checkbox" id="sort_k"><label for="sort_k">By Kingdom</label> <br>`;
     }
     if (colIndex.TIER !== undefined) {
         sortBoxes.innerHTML += `<input type="checkbox" id="sort_t"><label for="sort_t">By Tier</label>`;
@@ -93,7 +98,11 @@ function processData(text) {
     if (colIndex.DIFF !== undefined) {
         sortBoxes.innerHTML += `<input type="checkbox" id="sort_d"><label for="sort_d">By Diff</label>`;
     }
-
+    //set first item as active
+    if (items.length > 0) {
+        viewState.activeItemId = items[0].id;
+        updateDetails(viewState.activeItemId);
+    }
     updateView();
 
   // Show app, hide input
@@ -186,16 +195,29 @@ function renderChecklist(visibleItems) {
   checklistContainer.innerHTML = "";
   visibleItems.forEach((item, idx) => {
     const div = document.createElement("div");
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.id = "item_" + idx;
-    checkbox.addEventListener("change", () => {
-      updateDetails(item.id);
+    //create listener
+    div.addEventListener("click", () => {
+        if (viewState.activeItemId !== null) {
+            const oldActive = document.getElementById("item_" + viewState.activeItemId);
+            if (oldActive) oldActive.style.backgroundColor = ""; //reset old
+        }
+        viewState.activeItemId = item.id;
+        const newActive = document.getElementById("item_" + viewState.activeItemId);
+        newActive.style.backgroundColor = "#7a94f5b0"; //highlight new
+        updateDetails(item.id);
     });
+    if (viewState.activeItemId === item.id) {
+        div.style.backgroundColor = "#7a94f5b0"; //highlight active
+    }
+    else {
+        div.style.backgroundColor = ""; //default
+    }
+    div.className = "checklistItem";
     const label = document.createElement("label");
-    label.htmlFor = "item_" + idx;
-    label.textContent = item.name;
-    div.appendChild(checkbox);
+    div.id = "item_" + item.id;
+    label.htmlFor = "item_" + item.id;
+    //add green checkmark to name if accepted, red X if declined
+    label.textContent = item.name + (item.accepted ? " ✅" : "") + (item.declined ? " ❌" : "");
     div.appendChild(label);
     checklistContainer.appendChild(div);
   });
@@ -248,6 +270,7 @@ function updateView() {
     visibleItems = items.filter(searchMatch).slice().sort(comparator);
 
     renderChecklist(visibleItems);
+    scrollActiveIntoView();
 }
 
 function comparator(a, b) {
@@ -289,4 +312,94 @@ function searchMatch(item) {
     if (!query) return true;  // no search → everything matches
 
     return item.name.toLowerCase().includes(query);
+}
+
+function scrollActiveIntoView() {
+    if (!viewState.activeItemId) return; // no active item
+    const el = document.getElementById(`item_${viewState.activeItemId}`);
+    if (el) {
+        el.scrollIntoView({
+            behavior: "auto",   // quick scrolling
+            block: "center"       // vertical alignment: center of container
+        });
+    }
+}
+
+
+//button listeners
+acceptBtn.addEventListener("click", () => {
+    if (!viewState.activeItemId) return;
+    const item = items.find(i => i.id === viewState.activeItemId);
+    if (item) {
+        if (item.declined) declinedCount--;
+        item.accepted = true;
+        item.declined = false;
+        acceptedCount++;
+        counters.textContent = `Accepted: ${acceptedCount} | Declined: ${declinedCount}`;
+        move_to_next_item();
+    }
+});
+
+declineBtn.addEventListener("click", () => {
+    if (!viewState.activeItemId) return;
+    const item = items.find(i => i.id === viewState.activeItemId);
+    if (item) {
+        if (item.accepted) acceptedCount--;
+        item.accepted = false;
+        item.declined = true;
+        declinedCount++;
+        counters.textContent = `Accepted: ${acceptedCount} | Declined: ${declinedCount}`;
+        move_to_next_item();
+    }
+});
+
+skipBtn.addEventListener("click", () => {
+    move_to_next_item();
+});
+
+backBtn.addEventListener("click", () => {
+    move_to_previous_item();
+});
+
+function move_to_next_item() {
+    if (!viewState.activeItemId) return;
+    const item = items.find(i => i.id === viewState.activeItemId);
+    if (item) {
+        //first, get current item
+        document.getElementById("item_" + viewState.activeItemId).style.backgroundColor = ""; //reset current
+        //find next item
+        const currentIndex = visibleItems.findIndex(i => i.id === viewState.activeItemId);
+        const nextIndex = (currentIndex + 1) % visibleItems.length;
+        //replace with first item if next doesn't exist
+        if (!document.getElementById("item_" + visibleItems[nextIndex].id)) {
+            viewState.activeItemId = visibleItems[0].id;
+            const newActive = document.getElementById("item_" + viewState.activeItemId);
+            newActive.style.backgroundColor = "#7a94f5b0";
+            updateDetails(viewState.activeItemId);
+        }
+        else {
+            viewState.activeItemId = visibleItems[nextIndex].id;
+            const newActive = document.getElementById("item_" + viewState.activeItemId);
+            newActive.style.backgroundColor = "#7a94f5b0";
+            updateDetails(viewState.activeItemId);
+        }
+        updateView();
+    }
+}
+
+function move_to_previous_item() {
+    if (!viewState.activeItemId) return;
+    const item = items.find(i => i.id === viewState.activeItemId);
+    if (item) {
+        //first, get current item
+        document.getElementById("item_" + viewState.activeItemId).style.backgroundColor = ""; //reset current
+        //find previous item
+        const currentIndex = visibleItems.findIndex(i => i.id === viewState.activeItemId);
+        const prevIndex = Math.max(0, (currentIndex - 1 + visibleItems.length) % visibleItems.length);
+        viewState.activeItemId = visibleItems[prevIndex].id;
+        const newActive = document.getElementById("item_" + viewState.activeItemId);
+        newActive.style.backgroundColor = "#7a94f5b0";
+        updateDetails(viewState.activeItemId);
+        updateView();
+    }
 }

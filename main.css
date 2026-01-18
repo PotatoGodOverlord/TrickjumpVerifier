@@ -60,7 +60,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 0 10px;
+  padding-left: 5px;
   margin: 0;
   scrollbar-width: thin;
   scrollbar-color: #888 #f0f0f0;
@@ -117,10 +117,21 @@ body {
   background: linear-gradient(to top, rgb(246, 255, 245) 0%, rgba(246, 255, 245, 0.996) 12.5%, rgba(246, 255, 245, 0.984) 25%, rgba(246, 255, 245, 0.945) 37.5%, rgba(246, 255, 245, 0.875) 50%, rgba(246, 255, 245, 0.757) 62.5%, rgba(246, 255, 245, 0.576) 75%, rgba(246, 255, 245, 0.33) 87.5%, rgba(246, 255, 245, 0) 100%);
 }
 
+.checklistItem {
+    width: 100%;
+}
+.checklistItem:hover {
+  background-color: #c0eaf8;
+
+}
+
 /* Proof panel - right */
 #proofPanel {
-  display: flex;
+    position: absolute;
+    display: flex;
   flex-direction: column;
+  justify-self: center;
+  align-self: center;
   justify-content: center; /* vertical center */
   align-items: center;     /* horizontal center */
   text-align: center;
@@ -189,10 +200,19 @@ textarea {
     margin: 10px;
 }
 
-/* Scrollbars for long lists.
+#sort_k {
+    margin-bottom: 2px;
+}
 
-Styling checkboxes, buttons, search box, and counters.
+#buttonPanel {
+    margin-top: 2%;
+    margin-bottom: -2%;
+}
 
-Optional: coloring tiers or diff levels for quick visual cues.
+#acceptButton {
+    background-color: palegreen;
+}
 
-Responsive layout if possible for smaller screens. */
+#declineButton {
+    background-color: lightcoral;
+}
