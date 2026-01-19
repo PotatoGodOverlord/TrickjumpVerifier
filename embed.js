@@ -132,7 +132,7 @@
     
     function embedVideo(url, container) {
         const platform = getVideoPlatform(url);
-        
+        console.log('Detected platform:', platform);
         switch(platform) {
             case 'youtube':
                 return embedYouTube(url, container);
@@ -153,7 +153,7 @@
     function getVideoPlatform(url) {
         try {
             const domain = new URL(url).hostname.replace('www.', '');
-            
+            console.log('Extracted domain:', domain);
             if (domain.includes('youtube') || domain.includes('youtu.be')) return 'youtube';
             if (domain.includes('vimeo')) return 'vimeo';
             if (domain.includes('twitch')) return 'twitch';
@@ -341,18 +341,33 @@
     
     // ========== HELPER FUNCTIONS ==========
     function extractYouTubeId(url) {
+        if (!url || typeof url !== 'string') return null;
+
         const patterns = [
-            /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i,
-            /youtube\.com\/embed\/([^\/\?]+)/,
-            /youtu\.be\/([^\/\?]+)/
+            // youtube.com/watch?v=VIDEOID
+            /(?:youtube\.com\/.*[?&]v=)([^"&?\/\s]{11})/i,
+
+            // youtube.com/embed/VIDEOID
+            /youtube\.com\/embed\/([^"&?\/\s]{11})/i,
+
+            // youtube.com/v/VIDEOID
+            /youtube\.com\/v\/([^"&?\/\s]{11})/i,
+
+            // youtube.com/shorts/VIDEOID
+            /youtube\.com\/shorts\/([^"&?\/\s]{11})/i,
+
+            // youtu.be/VIDEOID
+            /youtu\.be\/([^"&?\/\s]{11})/i,
         ];
-        
+
         for (const pattern of patterns) {
             const match = url.match(pattern);
-            if (match && match[1]) return match[1];
+            if (match) return match[1];
         }
+
         return null;
     }
+
     function getEmbedKey(url) {
         try {
             const platform = getVideoPlatform(url);

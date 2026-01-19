@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trickjump Verifier</title>
   <link rel="stylesheet" href="main.css">
+  <!-- Favicons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicons/favicon-16x16.png">
+    <link rel="manifest" href="./favicons/site.webmanifest">
+    <link rel="icon" href="./favicons/favicon.ico">
 </head>
 <body>
   <!-- Input area -->
@@ -33,13 +39,15 @@
             </div>
         </div>
       <div id="proofPanel">
-        <a id="proofLink" href="#" target="externalTab">Proof</a>
-        <!-- Video embed container (you already have this) -->
-        <div id="videoContainer" 
-            style="width: 100%; max-width: 800px; min-height: 450px; min-width: 550px; margin: 20px auto;">
+        <div id="proofInner">
+            <a id="proofLink" href="#" target="externalTab">Proof</a>
+            <!-- Video embed container -->
+            <div id="videoContainer" 
+                style="width: 100%; max-width: 800px; min-height: 450px; min-width: 550px; margin: 20px auto;">
+            </div>
         </div>
 
-        <!-- FALLBACK MESSAGE CONTAINER (ADD THIS!) -->
+        <!-- FALLBACK MESSAGE CONTAINER -->
         <div id="fallbackMessage" style="display: none;">
         </div>
       </div>
