@@ -107,6 +107,7 @@ body {
   border: 2px solid #f0f0f0;
 }
 .fadeTop, .fadeBottom {
+  width: calc(20vw - 10px);
   position: absolute;
   left: 0;
   right: 10px;
@@ -125,7 +126,7 @@ body {
 }
 
 .checklistItem {
-    width: calc(100% - 12px);
+    width: calc(20vw - 10px);;
 }
 .checklistItem:hover {
   background-color: #c0eaf8;
@@ -254,4 +255,23 @@ textarea {
 .twitter-tweet-rendered {
     width: 550px !important;
 
+}
+
+#settingsMenu {
+    background: white;
+    width: 50vh;
+    height: 50vh;
+    position: absolute;
+    padding: 15px;
+    z-index: 10;
+}
+
+#closeSettings {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+}
+
+.conflict {
+    color: red;
 }

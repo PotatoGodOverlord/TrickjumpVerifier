@@ -26,6 +26,7 @@
         <div id="leftSide">
             <div id="searchContainer">
                 <input type="text" id="searchBox" placeholder="Search...">
+                <input type="button" id="settings" value="⚙️ Settings">
                 <div id="sortBoxes">
                     <input type="checkbox" id="sort_l"><label>Only Same Link</label>
                 </div>
@@ -39,6 +40,20 @@
             </div>
         </div>
       <div id="proofPanel">
+        <div id="settingsMenu" style="display: none;">
+            <h3>Settings</h3>
+            <input type="checkbox" id="autoOpen"><label for="autoOpen">Auto-open proof links</label><br>
+            <!-- keyboard shortcut options -->
+            <div id="shortcutButtons">
+             Accept <input type="button" data-action="accept" class="shortcut-btn"><br>
+             Decline <input type="button" data-action="decline" class="shortcut-btn"><br>
+             Skip <input type="button" data-action="skip" class="shortcut-btn"><br>
+             Back <input type="button" data-action="back" class="shortcut-btn"><br>
+             Search <input type="button" data-action="search" class="shortcut-btn"><br>
+             <input type="button" id="resetShortcuts" value="Reset Shortcuts" style ="margin-top: 10px;">
+            </div>
+            <button id="closeSettings">Close</button>
+        </div>
         <div id="proofInner">
             <a id="proofLink" href="#" target="externalTab">Proof</a>
             <!-- Video embed container -->
@@ -70,5 +85,6 @@
     <script async src="https://www.instagram.com/embed.js"></script>
   <script src="embed.js"></script>
   <script src="verifier.js"></script>
+  <script src="keyboard_shortcuts.js"></script>
 </body>
 

@@ -21,6 +21,7 @@ let items = [];
 let acceptedCount = 0;
 let declinedCount = 0;
 let remainingCount = 0;
+let firstItem = true;
 let viewState = {
     searchQuery: "",
     sortPriority: {
@@ -331,9 +332,10 @@ async function updateDetails(id) {
     proofLink.textContent = `${link}`;
   const embedSuccess = await window.tryEmbedMedia(item.proof);
   if (!embedSuccess) {
-    if (viewState.autoOpen) {
+    if (!firstItem && viewState.autoOpen) {
         proofLink.click();
     }
+    firstItem = false;
   }
 }
 
@@ -558,3 +560,4 @@ function linkMatch(item) {
     if (!activeItem) return true; // no active item → everything matches
     return item.proof === activeItem.proof;
 }
+
