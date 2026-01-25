@@ -3,6 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        connect-src 'self' https://trickjumpverifier.potatogodoverlord.workers.dev;
+        script-src 'self'
+          https://platform.twitter.com
+          https://www.tiktok.com
+          https://*.tiktokcdn-us.com
+          https://www.instagram.com;
+        frame-src
+          https://www.youtube.com
+          https://www.youtube-nocookie.com
+          https://www.tiktok.com
+          https://www.instagram.com
+          https://platform.twitter.com;
+        style-src 'self' 'unsafe-inline' https://*.tiktokcdn-us.com;
+        img-src 'self'
+          https://i.ytimg.com
+          https://img.youtube.com;
+      ">
+
   <title>Trickjump Verifier</title>
   <link rel="stylesheet" href="main.css">
   <!-- Favicons -->

@@ -42,7 +42,13 @@ loadDataBtn.addEventListener("click", () => {
     reader.readAsText(fileInput.files[0]);
   } else if (content.trim() !== "" && content.includes("|")) {
     processData(content);
-  } else {
+  } else if (content.trim() !== "" && content.includes("https://pastee")) {
+    fetch(`https://trickjumpverifier.potatogodoverlord.workers.dev/?url=${encodeURIComponent(content.trim())}`)
+      .then(res => res.text())
+      .then(processData)
+      .catch(console.error);
+  }
+   else {
     alert("Please upload a file or paste valid content.");
   }
 });
@@ -133,22 +139,33 @@ function processProgressData(lines) {
     if (rows.length === 0) return;
 
     // Convert rows into items
-    items = rows.map(cols => ({
-        name: cols[colIndex.name],
-        proof: cols[colIndex.proof],
-        ...(colIndex.location !== undefined && cols[colIndex.location] !== "" && {
-            location: normalizeLocation(cols[colIndex.location])
-        }),
-        ...(colIndex.diff !== undefined && cols[colIndex.diff] !== "" && {
-            diff: normalizeDiff(cols[colIndex.diff])
-        }),
-        ...(colIndex.tier !== undefined && cols[colIndex.tier] !== "" && {
-            tier: normalizeTier(cols[colIndex.tier])
-        }),
-        accepted: cols[colIndex.accepted] === "true",
-        declined: cols[colIndex.declined] === "true",
-        id: Math.random().toString(36).substring(2, 15)
-    }));
+    items = rows.map(cols => {
+        // Convert status back to accepted/declined flags
+        let accepted = false;
+        let declined = false;
+        if (colIndex.status !== undefined) {
+            const status = cols[colIndex.status].toLowerCase();
+            if (status === "accepted") accepted = true;
+            else if (status === "declined") declined = true;
+        }
+
+        return {
+            name: cols[colIndex.name],
+            proof: cols[colIndex.proof],
+            ...(colIndex.location !== undefined && cols[colIndex.location] !== "" && {
+                location: normalizeLocation(cols[colIndex.location])
+            }),
+            ...(colIndex.diff !== undefined && cols[colIndex.diff] !== "" && {
+                diff: normalizeDiff(cols[colIndex.diff])
+            }),
+            ...(colIndex.tier !== undefined && cols[colIndex.tier] !== "" && {
+                tier: normalizeTier(cols[colIndex.tier])
+            }),
+            accepted,
+            declined,
+            id: Math.random().toString(36).substring(2, 15)
+        };
+    });
 
     // Default sort
     items.sort((a, b) => a.name.localeCompare(b.name));
@@ -340,49 +357,48 @@ async function updateDetails(id) {
 }
 
 // Download accepted items
-// Download accepted items
 downloadBtn.addEventListener("click", () => {
-  const acceptedItems = items.filter(i => i.accepted);
-  const declinedItems = items.filter(i => i.declined);
-  const unverifiedItems = items.filter(
-    i => !i.accepted && !i.declined
-  );
-
   const orderedItems = [
-    ...acceptedItems,
-    ...declinedItems,
-    ...unverifiedItems
+    ...items.filter(i => i.accepted),
+    ...items.filter(i => i.declined),
+    ...items.filter(i => !i.accepted && !i.declined)
   ];
 
   const existingColumns = Array.from(
     new Set(items.flatMap(item => Object.keys(item)))
-  ).filter(col => col !== "id");
+  ).filter(col => !["id", "accepted", "declined"].includes(col)); // exclude old status columns
 
   const preferredOrder = [
     "name",
     "proof",
+    "status", // new column
     "location",
     "diff",
-    "tier",
-    "accepted",
-    "declined"
+    "tier"
   ];
 
   const columns = preferredOrder.filter(col =>
-    existingColumns.includes(col)
+    col === "status" || existingColumns.includes(col)
   );
 
   const headerLine = "CURRENT PROGRESS FOR REQUEST:";
-  const columnHeaders = columns.join(" | ");  // Add this line
+  const columnHeaders = columns.join(" | ");
 
   const textContent = [
     headerLine,
-    columnHeaders,  // Add column headers
-    ...orderedItems.map(item =>
-      columns
-        .map(col => item[col] ?? "")
-        .join(" | ")
-    )
+    columnHeaders,
+    ...orderedItems.map(item => {
+      return columns
+        .map(col => {
+          if (col === "status") {
+            if (item.accepted) return "Accepted";
+            if (item.declined) return "Declined";
+            return "Unverified";
+          }
+          return item[col] ?? "";
+        })
+        .join(" | ");
+    })
   ].join("\n");
 
   const blob = new Blob([textContent], { type: "text/plain" });
@@ -393,6 +409,7 @@ downloadBtn.addEventListener("click", () => {
   a.click();
   URL.revokeObjectURL(url);
 });
+
 
 //sort listeners
 document.getElementById("searchContainer").addEventListener("change", e => {
