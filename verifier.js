@@ -48,6 +48,8 @@ loadDataBtn.addEventListener("click", () => {
       .then(res => res.text())
       .then(processData)
       .catch(console.error);
+  } else if (content.trim() !== "" && content.includes("https://gist.github.com/Jumpedia")) {
+    getGistContent(content.trim());
   }
    else {
     alert("Please upload a file or paste valid content.");
@@ -200,6 +202,126 @@ function processProgressData(lines) {
     inputArea.style.display = "none";
     appArea.style.display = "grid";
 }
+
+function getGistContent(urls) {
+    const urlList = urls.split(/\s+/).filter(u => u.trim() !== "");
+
+    const gistIds = urlList
+    .map(url => {
+        const match = url.match(/(?:#\d+:\s*)?https:\/\/gist\.github\.com\/Jumpedia\/([a-f0-9]+)/);
+        return match ? match[1] : null;
+    })
+    .filter(id => id !== null);
+
+
+    if (gistIds.length === 0) {
+        alert("No valid Jumpedia gist URLs found.");
+        return;
+    }
+    fetchGistMarkdowns(gistIds).then(({ headerCols, content }) => {
+        headerCols = headerCols.map(col => col.replace(/`/g, ""));
+        let rows = content.map(line => line.split("|").map(c => c.trim().replace(/`/g, ""))).filter(cols => cols.length > 1 && cols[1] && cols[1].trim() !== "");
+        if (rows.length === 0) {
+            alert("No valid data found in the provided gists.");
+            return;
+        }
+        processGistData(headerCols, rows);
+    });
+    //`4073`|`Water Tower Traversal`||`10/10`|`Vault`|`Metro Kingdom`||||`Database`|`https://youtu.be/dNdOJX12R5g`||`https://www.youtube.com/watch?v=S8tNmCBHgNI`
+}
+
+function processGistData(headerCols, rows) {
+    console.log(headerCols, rows);
+    const colIndex = Object.fromEntries(headerCols.map((name, i) => [name, i]));
+    const totalCols = headerCols.length;
+    console.log(colIndex, totalCols);
+    //convert to items
+    //log the colums for the first 5 entries in rows
+    console.log("Sample rows:");
+    for (let i = 0; i < Math.min(5, rows.length); i++) {
+        console.log(rows[i]);
+    }
+    items = rows.map(cols => {
+        // const diffVal = normalizeDiff(cols[colIndex.Difficulty]);
+        // console.log(`Raw diff: "${cols[colIndex.Difficulty]}", Normalized diff: ${diffVal}`);
+
+        return {
+            name: cols[colIndex.Name],
+            proof: cols[colIndex.Proof],
+            ...(colIndex.Location !== undefined && { location: normalizeLocation(cols[colIndex.Location]) }),
+            ...(colIndex.Difficulty !== undefined && { diff: normalizeDiff(cols[colIndex.Difficulty]) }),
+            ...(colIndex.Tier !== undefined && { tier: normalizeTier(cols[colIndex.Tier]) }),
+            accepted: false,
+            declined: false,
+            id: Math.random().toString(36).substring(2, 15)
+        };
+    });
+
+    //default sort
+    console.log(items);
+    items.sort((a, b) => a.name.localeCompare(b.name));
+    //add sort boxes
+    if (items[0].location !== undefined) {
+        sortBoxes.innerHTML += `<input type="checkbox" id="sort_k"><label for="sort_k">By Kingdom</label> <br>`;
+    }
+    if (colIndex.Tier !== undefined) {
+        sortBoxes.innerHTML += `<input type="checkbox" id="sort_t"><label for="sort_t">By Tier</label>`;
+    }
+    if (colIndex.Difficulty !== undefined) {
+        sortBoxes.innerHTML += `<input type="checkbox" id="sort_d"><label for="sort_d">By Diff</label>`;
+    }
+    //set first item as active
+    if (items.length > 0) {
+        viewState.activeItemId = items[0].id;
+        updateDetails(viewState.activeItemId);
+    }
+    remainingCount = items.length;
+    counters.textContent = `Accepted: ${acceptedCount} | Declined: ${declinedCount} | Remaining: ${remainingCount}`;
+    updateView();
+
+  // Show app, hide input
+  inputArea.style.display = "none";
+  appArea.style.display = "grid";
+}
+
+async function fetchGistMarkdowns(gistIds) {
+    let headerCols = []; // first line of first file
+    let content = [];    // content of each file, excluding first line
+
+    try {
+        const markdowns = await Promise.all(
+            gistIds.map(async (id, index) => {
+                const res = await fetch(`https://api.github.com/gists/${id}`);
+                if (!res.ok) throw new Error(`Gist ${id} not found`);
+                const data = await res.json();
+
+                const fileKey = Object.keys(data.files).find(key => key.endsWith(".md"));
+                if (!fileKey) throw new Error(`No markdown file found in gist ${id}`);
+
+                const fileContent = data.files[fileKey].content;
+                const lines = fileContent.split('\n');
+
+                if (index === 0) {
+                    // parse first line of first file as header columns
+                    headerCols = lines[0]
+                        .split('|')         // split by pipe
+                        .map(col => col.trim()) // remove extra spaces
+                        .filter(col => col.length > 0); // remove empty strings
+                }
+
+                // store the rest of the file (excluding first line)
+                return lines.slice(2).map(line => line.startsWith('|') ? line.slice(1) : line);
+            })
+        );
+
+        content = markdowns.flat(); // all other lines for each file
+        return { headerCols, content };
+    } catch (err) {
+        console.error(err);
+        return { headerCols, content }; // empty if error
+    }
+}
+
 
 // -------------------------
 //diff mapping
