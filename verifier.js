@@ -231,20 +231,9 @@ function getGistContent(urls) {
 }
 
 function processGistData(headerCols, rows) {
-    console.log(headerCols, rows);
     const colIndex = Object.fromEntries(headerCols.map((name, i) => [name, i]));
     const totalCols = headerCols.length;
-    console.log(colIndex, totalCols);
-    //convert to items
-    //log the colums for the first 5 entries in rows
-    console.log("Sample rows:");
-    for (let i = 0; i < Math.min(5, rows.length); i++) {
-        console.log(rows[i]);
-    }
     items = rows.map(cols => {
-        // const diffVal = normalizeDiff(cols[colIndex.Difficulty]);
-        // console.log(`Raw diff: "${cols[colIndex.Difficulty]}", Normalized diff: ${diffVal}`);
-
         return {
             name: cols[colIndex.Name],
             proof: cols[colIndex.Proof],
@@ -258,7 +247,6 @@ function processGistData(headerCols, rows) {
     });
 
     //default sort
-    console.log(items);
     items.sort((a, b) => a.name.localeCompare(b.name));
     //add sort boxes
     if (items[0].location !== undefined) {
