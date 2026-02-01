@@ -28,6 +28,7 @@ body {
     flex-direction: column;
     min-height: 0;
     width: 100%;
+    height: calc(99vh - 176.5px);
 }
 
 #searchContainer {
@@ -64,6 +65,7 @@ body {
   left: 0;
   right: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -158,9 +160,19 @@ body {
 }
 /* Bottom section: details */
 #bottomArea {
+    position: relative;
     width: 100%;
     bottom: 0;
     min-height: 0;
+}
+#bottomArea::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 30%;
+  border-top: 1px solid #ccc;
+  transform: translateX(-50%);
 }
 
 #detailsPanel {
@@ -172,7 +184,6 @@ body {
   justify-self: center;
   align-items: center;
   text-align: center;
-  border-top: 1px solid #ccc;
   padding: 10px;
   box-sizing: border-box;
 }
@@ -224,16 +235,34 @@ textarea {
 }
 
 #buttonPanel {
-    margin-top: 2%;
-    margin-bottom: -2%;
+  margin-left: 5px;
+    z-index: 20;
 }
 
 #acceptButton {
-    background-color: palegreen;
+  background-color: palegreen;
+  height: 20%;
+  margin-bottom: 5px;
+  z-index: 20;
 }
 
 #declineButton {
-    background-color: lightcoral;
+  background-color: lightcoral;
+  height: 20%;
+  margin-bottom: 5px;
+  z-index: 20;
+}
+
+#skipButton {
+  height: 20%;
+  margin-bottom: 5px;
+  z-index: 20;
+}
+
+#backButton {
+  height: 20%;
+  margin-bottom: 5px;
+  z-index: 20;
 }
 
 .twitter-video-only {

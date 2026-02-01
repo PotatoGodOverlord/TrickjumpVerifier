@@ -494,10 +494,10 @@ acceptBtn.addEventListener("click", () => {
     const item = items.find(i => i.id === viewState.activeItemId);
     if (item) {
         if (item.declined) declinedCount--;
+        if (!item.declined && !item.accepted) remainingCount--;
         item.accepted = true;
         item.declined = false;
         acceptedCount++;
-        remainingCount--;
         counters.textContent = `Accepted: ${acceptedCount} | Declined: ${declinedCount} | Remaining: ${remainingCount}`;
         move_to_next_item();
     }
@@ -508,10 +508,10 @@ declineBtn.addEventListener("click", () => {
     const item = items.find(i => i.id === viewState.activeItemId);
     if (item) {
         if (item.accepted) acceptedCount--;
+        if (!item.declined && !item.accepted) remainingCount--;
         item.accepted = false;
         item.declined = true;
         declinedCount++;
-        remainingCount--;
         counters.textContent = `Accepted: ${acceptedCount} | Declined: ${declinedCount} | Remaining: ${remainingCount}`;
         move_to_next_item();
     }
