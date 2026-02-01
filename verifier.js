@@ -16,6 +16,7 @@ const acceptBtn = document.getElementById("acceptButton");
 const declineBtn = document.getElementById("declineButton");
 const skipBtn = document.getElementById("skipButton");
 const backBtn = document.getElementById("backButton");
+const changeBtn = document.getElementById("changeButton");
 
 let items = [];
 let acceptedCount = 0;
@@ -169,7 +170,6 @@ function processProgressData(lines) {
 
     // Default sort
     items.sort((a, b) => a.name.localeCompare(b.name));
-    console.log(items);
 
     // Initialize accepted/declined counts
     acceptedCount = items.filter(i => i.accepted).length;
@@ -523,6 +523,33 @@ skipBtn.addEventListener("click", () => {
 
 backBtn.addEventListener("click", () => {
     move_to_previous_item();
+});
+
+changeBtn.addEventListener("click", () => {
+    // Show input, hide app
+    inputArea.style.display = "flex";
+    appArea.style.display = "none";
+    // Reset state
+    items = [];
+    acceptedCount = 0;
+    declinedCount = 0;
+    remainingCount = 0;
+    firstItem = true;
+    viewState = {
+        searchQuery: "",
+        sortPriority: {
+            sameLink: false,
+            location: false,
+            tier: false,
+            diff: false
+        },
+        activeItemId: null,
+        autoOpen: false
+    };
+    checklistContainer.innerHTML = "";
+    sortBoxes.innerHTML = "";
+    pasteInput.value = "";
+    fileInput.value = "";
 });
 
 function move_to_next_item() {

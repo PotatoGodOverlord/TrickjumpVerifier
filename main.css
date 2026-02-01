@@ -235,8 +235,9 @@ textarea {
 }
 
 #buttonPanel {
+  display: flex;
   margin-left: 5px;
-    z-index: 20;
+  z-index: 20;
 }
 
 #acceptButton {
@@ -262,6 +263,14 @@ textarea {
 #backButton {
   height: 20%;
   margin-bottom: 5px;
+  z-index: 20;
+}
+
+#changeButton {
+  height: 20%;
+  margin-bottom: 5px;
+  margin-left: auto;
+  margin-right: 5px;
   z-index: 20;
 }
 
