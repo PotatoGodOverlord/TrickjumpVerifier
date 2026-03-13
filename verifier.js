@@ -377,6 +377,7 @@ const locationMap = {
   "Luncheon Kingdom": 12,
   "Ruined Kingdom": 13,
   "Bowser’s Kingdom": 14,
+  "Bowser's Kingdom": 14,
   "Moon Kingdom": 15,
   "Dark Side": 16,
   "Darker Side": 17,
@@ -715,3 +716,14 @@ function linkMatch(item) {
     return item.proof === activeItem.proof;
 }
 
+document.getElementById("pasteBtn").addEventListener("click", async () => {
+  try {
+    const text = await navigator.clipboard.readText(); // must be user gesture
+    const textarea = document.getElementById("pasteInput");
+    textarea.value += text;
+    textarea.focus();
+    console.log("Pasted:", text);
+  } catch (err) {
+    console.error("Clipboard read failed:", err);
+  }
+});

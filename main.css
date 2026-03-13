@@ -313,3 +313,7 @@ textarea {
 .conflict {
     color: red;
 }
+
+#fileInput {
+  margin-left: 10px;
+}

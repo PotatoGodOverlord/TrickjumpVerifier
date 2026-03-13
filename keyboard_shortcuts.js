@@ -59,10 +59,12 @@ function acceptJump() {
     const item = items.find(i => i.id === viewState.activeItemId);
     if (item) {
         if (item.declined) declinedCount--;
-        item.accepted = true;
-        item.declined = false;
-        acceptedCount++;
-        remainingCount--;
+        if (!item.accepted) {
+            if (!item.declined) remainingCount--;
+            item.accepted = true;
+            item.declined = false;
+            acceptedCount++;
+        }
         counters.textContent = `Accepted: ${acceptedCount} | Declined: ${declinedCount} | Remaining: ${remainingCount}`;
         move_to_next_item();
     }
@@ -72,10 +74,12 @@ function declineJump() {
     const item = items.find(i => i.id === viewState.activeItemId);
     if (item) {
         if (item.accepted) acceptedCount--;
-        item.accepted = false;
-        item.declined = true;
-        declinedCount++;
-        remainingCount--;
+        if (!item.declined) {
+            if (!item.accepted) remainingCount--;
+            item.accepted = false;
+            item.declined = true;
+            declinedCount++;
+        }
         counters.textContent = `Accepted: ${acceptedCount} | Declined: ${declinedCount} | Remaining: ${remainingCount}`;
         move_to_next_item();
     }
