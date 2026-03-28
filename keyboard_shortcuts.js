@@ -342,3 +342,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     autoOpenCheckbox.checked = viewState.autoOpen;
 });
+
+const filterBtnContainer = document.getElementById("sortBoxes");
+// list of IDs we want this special focus behavior for
+const checkboxIDs = ["sort_l", "sort_k", "sort_d", "sort_t"];
+// map IDs to elements that exist on the page
+filterBtnContainer.addEventListener("click", (e) => {
+    const target = e.target;
+    const checkboxes = checkboxIDs
+    .map(id => document.getElementById(id))
+    .filter(el => el); // remove nulls for non-existing checkboxes
+    // find if the click was on a checkbox or its label
+    for (const checkbox of checkboxes) {
+        const label = filterBtnContainer.querySelector(`label[for="${checkbox.id}"]`);
+        if (target === checkbox || target === label) {
+            checkbox.checked = !checkbox.checked; // manually toggle
+            document.body.focus(); // move focus away
+            checkbox.dispatchEvent(new Event('change', { bubbles: true })); // trigger change event
+            e.preventDefault(); // prevent default browser focus
+            break; // stop looping after the first match
+        }
+    }
+});

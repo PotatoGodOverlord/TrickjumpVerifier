@@ -9,6 +9,7 @@ const searchContainer = document.getElementById("searchContainer");
 const sortBoxes = document.getElementById("sortBoxes");
 const checklistContainer = document.getElementById("checklistContainer");
 const proofLink = document.getElementById("proofLink");
+const jumpDetails = document.getElementById("jumpDetails");
 const counters = document.getElementById("counters");
 const downloadBtn = document.getElementById("downloadProgress");
 
@@ -92,7 +93,7 @@ function processData(text) {
     //convert to items
     items = logicalRows.map(cols => ({
     name: cols[colIndex.NAME],
-    proof: cols[colIndex.PROOF],
+    proof: !cols[colIndex.PROOF].trim().startsWith("http") ? "https://" + cols[colIndex.PROOF].trim() : cols[colIndex.PROOF].trim(),
     ...(colIndex.LOCATION !== undefined && { location: normalizeLocation(cols[colIndex.LOCATION])}),
     ...(colIndex.DIFF !== undefined && { diff: normalizeDiff(cols[colIndex.DIFF])}),
     ...(colIndex.TIER !== undefined && { tier: normalizeTier(cols[colIndex.TIER])}),
@@ -236,7 +237,7 @@ function processGistData(headerCols, rows) {
     items = rows.map(cols => {
         return {
             name: cols[colIndex.Name],
-            proof: cols[colIndex.Proof],
+            proof: !cols[colIndex.Proof].trim().startsWith("http") ? "https://" + cols[colIndex.Proof].trim() : cols[colIndex.Proof].trim(),
             ...(colIndex.Location !== undefined && { location: normalizeLocation(cols[colIndex.Location]) }),
             ...(colIndex.Difficulty !== undefined && { diff: normalizeDiff(cols[colIndex.Difficulty]) }),
             ...(colIndex.Tier !== undefined && { tier: normalizeTier(cols[colIndex.Tier]) }),
@@ -314,6 +315,27 @@ async function fetchGistMarkdowns(gistIds) {
 // -------------------------
 //diff mapping
 const diffMap = {
+  "0/10": 0,
+  "0.5/10": 0.5,
+  "1/10": 1,
+  "1.5/10": 1.5,
+  "2/10": 2,
+  "2.5/10": 2.5,
+  "3/10": 3,
+  "3.5/10": 3.5,
+  "4/10": 4,
+  "4.5/10": 4.5,
+  "5/10": 5,
+  "5.5/10": 5.5,
+  "6/10": 6,
+  "6.5/10": 6.5,
+  "7/10": 7,
+  "7.5/10": 7.5,
+  "8/10": 8,
+  "8.5/10": 8.5,
+  "9/10": 9,
+  "9.5/10": 9.5,
+  "10/10": 10,
   "Low Elite": 11,
   "Mid Elite": 12,
   "High Elite": 13,
@@ -458,6 +480,20 @@ async function updateDetails(id) {
     }
 
     proofLink.textContent = `${link}`;
+    let details = "";
+    if (item.location !== undefined) {
+        const locationEntry = Object.entries(locationMap).find(([key, value]) => value === item.location);
+        if (locationEntry) {
+            details += locationEntry[0];
+        }
+    }
+    if (item.diff !== undefined) {
+        const diffEntry = Object.entries(diffMap).find(([key, value]) => value === item.diff);
+        if (diffEntry) {
+                details += (details ? " - " : "") + `${diffEntry[0]}`;
+        }
+    }
+    jumpDetails.textContent = details;
   const embedSuccess = await window.tryEmbedMedia(item.proof);
   if (!embedSuccess) {
     if (!firstItem && viewState.autoOpen) {
