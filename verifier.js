@@ -63,7 +63,7 @@ function processData(text) {
         processProgressData(lines.slice(1));
         return;
     }
-    const headerCols = lines[0].split(">").map(h => h.trim()).filter(Boolean);
+    const headerCols = lines[0].split("|").map(h => h.trim()).filter(Boolean);
     const colIndex = Object.fromEntries(headerCols.map((name, i) => [name, i]));
 
     const totalCols = headerCols.length;
@@ -75,7 +75,7 @@ function processData(text) {
     const logicalRows = [];
     let buffer = "";
 
-    for (const line of lines.slice(1)) {
+    for (const line of lines.slice(2)) {
     buffer += (buffer ? "\n" : "") + line;
 
     const cols = splitCols(buffer);
@@ -105,7 +105,7 @@ function processData(text) {
     //default sort
     items.sort((a, b) => a.name.localeCompare(b.name));
     //add sort boxes
-    if (items[0].location !== undefined) {
+    if (colIndex.LOCATION !== undefined) {
         sortBoxes.innerHTML += `<input type="checkbox" id="sort_k"><label for="sort_k">By Kingdom</label> <br>`;
     }
     if (colIndex.TIER !== undefined) {
